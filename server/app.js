@@ -6,10 +6,10 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const multer = require('multer');
 const cors = require('cors');
+const graphqlHttp = require('express-graphql');
 
-
-const feedRoutes = require('./routes/feed');
-const authRoutes = require('./routes/auth');
+const graphqlSchema = require('./graphql/schema');
+const graphqlResolver = require('./graphql/resolvers');
 
 const app = express();
 
@@ -56,8 +56,14 @@ app.use(cors());
 //     next();
 //   });
 
-app.use('/feed', feedRoutes);
-app.use('/auth', authRoutes);
+app.use(
+    '/graphql', 
+    graphqlHttp({
+        schema: graphqlSchema,
+        rootValue: graphqlResolver,
+        graphiql: true
+    })
+);
 
 app.use((error, req, res, next) => {
    console.log(error);
@@ -68,13 +74,9 @@ app.use((error, req, res, next) => {
 });
 
 mongoose
-    .connect(process.env.MONGODB_URI, {useNewUrlParser: true})
+    .connect(process.env.MONGODB_URI, { useNewUrlParser: true }, )
     .then(result => {
-        console.log('Connected!');
-        const server = app.listen(8080);
-        const io = require('./socket').init(server);
-        io.on('connection', socket => {
-            console.log('Client connected');
-        });
+        app.listen(8080);
+        console.log('Connected!');                
     })
-    .catch(err => console.log(err));
+    .catch(err => console.log(err));     
