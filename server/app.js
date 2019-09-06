@@ -10,6 +10,7 @@ const graphqlHttp = require('express-graphql');
 
 const graphqlSchema = require('./graphql/schema');
 const graphqlResolver = require('./graphql/resolvers');
+const auth = require('./middleware/auth');
 
 const app = express();
 
@@ -55,6 +56,8 @@ app.use(cors() );
 //     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 //     next();
 //   });
+
+app.use(auth);
 
 app.use(
     '/graphql', 
