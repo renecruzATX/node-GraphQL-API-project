@@ -57,7 +57,7 @@ class Feed extends Component {
     const graphqlQuery = {
       query: `
         {
-          posts {
+          posts(page: ${page}) {
             posts {
               _id
               title
@@ -67,10 +67,11 @@ class Feed extends Component {
               }
               createdAt
             }
+            totalPosts
           }
         }
       `
-    }
+    };
     fetch('http://localhost:8080/graphql', {
       method: 'POST',
       headers: {
@@ -202,19 +203,22 @@ class Feed extends Component {
         };
         this.setState(prevState => {
           let updatedPosts = [...prevState.posts];
+          let updatedTotalPosts = prevState.totalPosts;
           if (prevState.editPost) {
             const postIndex = prevState.posts.findIndex(
               p => p._id === prevState.editPost._id
             );
             updatedPosts[postIndex] = post;
           } else {
+            updatedTotalPosts++;
             updatedPosts.unshift(post);
           }          
           return {
             posts: updatedPosts,
             isEditing: false,
             editPost: null,
-            editLoading: false
+            editLoading: false,
+            totalPosts: updatedTotalPosts
           };
         });
       })
@@ -312,7 +316,7 @@ class Feed extends Component {
             <Paginator
               onPrevious={this.loadPosts.bind(this, 'previous')}
               onNext={this.loadPosts.bind(this, 'next')}
-              lastPage={Math.ceil(this.state.totalPosts / 5)}
+              lastPage={Math.ceil(this.state.totalPosts / 3)}
               currentPage={this.state.postPage}
             >
               {this.state.posts.map(post => (
