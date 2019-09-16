@@ -274,30 +274,40 @@ class Feed extends Component {
 
   deletePostHandler = postId => {
     this.setState({ postsLoading: true });
-    fetch('http://localhost:8080/feed/post/' + postId, {
-      method: 'DELETE',
-      headers: {
-        Authorization: 'Bearer ' + this.props.token
-      }
-    })
-      .then(res => {
-        if (res.status !== 200 && res.status !== 201) {
-          throw new Error('Deleting a post failed!');
+    const graphqlQuery = {
+      query: `
+        mutation {
+          deletePost(id: "${postId}")
         }
-        return res.json();
-      })
-      .then(resData => {
-        console.log(resData);
-        this.loadPosts();
-        // this.setState(prevState => {
-        //   const updatedPosts = prevState.posts.filter(p => p._id !== postId);
-        //   return { posts: updatedPosts, postsLoading: false };
-        // });
-      })
-      .catch(err => {
-        console.log(err);
-        this.setState({ postsLoading: false });
-      });
+      `
+    }
+    fetch('http://localhost:8080/graphql', {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer ' + this.props.token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(graphqlQuery)
+    })
+    .then(res => {       
+      return res.json();
+    })
+    .then(resData => {
+      if (resData.errors) {
+        console.log(resData.errors);
+        throw new Error('Deleting post failed!')
+      }
+      console.log(resData);
+      this.loadPosts();
+      // this.setState(prevState => {
+      //   const updatedPosts = prevState.posts.filter(p => p._id !== postId);
+      //   return { posts: updatedPosts, postsLoading: false };
+      // });
+    })
+    .catch(err => {
+      console.log(err);
+      this.setState({ postsLoading: false });
+    });
   };
 
   errorHandler = () => {
